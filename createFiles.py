@@ -1,10 +1,52 @@
+""""
+
+Ing****ty Programming Test
+
+Sequential File Selector
+
+A small gui program for displaying and selecting sequential files.
+
+Use "createFiles.py" to create a batch of test files.  Modify the fileRoot as necessary for your system.
+
+Should run as follows:
+- User browses their computer and selects a folder
+- This populates a list widget with the files in that folder
+- Sequential files should be collapsed to the following format:
+
+	[baseName].%[framePadding].[extension] [startFrame]-[endFrame]
+
+	Frame padding is always separated from the filename by a period.
+
+	for example:
+	taco.0001.jpg
+	taco.0002.jpg
+	taco.0003.jpg
+	
+	would collapse to:
+	taco.%04d.jpg 1-3
+
+	but:
+	comp_v001.mb
+	comp_v002.mb
+
+	would not collapse as there is no frame padding
+
+- User can multi select files in this list
+- A pressable button displays a message box listing the actual files the user selected
+
+	ex: If the user selected taco.%04d.jpg 1-3, the message box would display
+	taco.0001.jpg, taco.0002.jpg, taco.0003.jpg
+
+The program should be created in Python 2.7 with the gui done in PySide.  Please refrain from using other third party libraries outside of PySide as we may not have them installed.
+""""
+
 from PySide import QtCore, QtGui
 import os
 import random
 import re
 import imp
 import sys
-from PyQt4.Qt import QString
+from PyQt4.Qt import QString, QListWidget
 
 # root where the files will be created
 fileRoot = '/sequenceFileSelector/'
@@ -78,10 +120,18 @@ class FileSequenceWidget(QtGui.QWidget):
 		display.setFixedHeight(190)
 	
 		b1 = QtGui.QListWidget(display)
+		b1.reset()
 		for i in self.listseq4:
+			print i
+			print'--'
 			b1.addItem(i)
 		
+		
 		display.exec_()
+		self.listseq2[:] = []
+		self.listseq3[:] = []
+		self.listseq4[:] = []
+	
 
 
     def getFilenameSelected( self ):
@@ -102,36 +152,44 @@ class FileSequenceWidget(QtGui.QWidget):
         if  os.path.isdir(os.path.join( self.path , itemSelected)) :
 			self.path = os.path.normpath( os.path.join( self.path , itemSelected) ) 
 			self.pathEdit.setText( self.path )
-        
-	
+
+
     def selectfile(self, number):
     	
 		itemSelected = self.listfile.currentIndex().data()
-		self.listseq3.append(itemSelected)
+		if itemSelected in self.listseq3 :
+			pass
+		else:
+
+			self.listseq3.append(itemSelected)
+
 		path = QtCore.QDir.currentPath()
 
 		self.fileSelected.emit(os.path.join( self.path , itemSelected))		
 		directory = QtCore.QDir(os.path.join(path,'sequenceFileSelector'))
 		self.listseq2 = list(directory.entryList(QtCore.QDir.AllEntries))
-		for i in self.listseq2:
-			print str(i)
+
  		
  		
 		for i in range(len(self.listseq2)):
 			ic = self.listseq2[i]
-			
 			c = ic.split(".")
 			for d in self.listseq3:
 				e = d.split(".")
 				if str(c[0]) == str(e[0]):
-					self.listseq4.append(ic)
+					if ic in self.listseq4 :
+						pass
+					else:
+						print 'append'
+						print ic
+						self.listseq4.append(ic)
 
 					
   					 
 		
 		
 		files = [e for e in os.listdir(path) if os.path.isfile(os.path.join(path, e))]
-
+		
 
 
     def addItem(self, fn,typefile ):
@@ -196,7 +254,8 @@ class FileSequenceWidget(QtGui.QWidget):
         
 
         label.setBuddy(pathEdit)
-        self.listing_btn.clicked.connect(self.saveDialog)	
+        self.listing_btn.clicked.connect(self.saveDialog)
+
 
 
         self.pathEdit.textChanged.connect(self.setCurrentDirPath)
@@ -204,7 +263,9 @@ class FileSequenceWidget(QtGui.QWidget):
         
         
         self.directorylist.doubleClicked.connect(self.selectdirectory)
-        self.directorylist.itemSelected.connect(self.selectdirectory)
+#         self.directorylist.itemSelected.connect(self.selectdirectory)
+        
+
 
 
  
@@ -236,7 +297,7 @@ class FileSequenceWidget(QtGui.QWidget):
             files = [e for e in os.listdir(path) if os.path.isfile(os.path.join(path, e))]
 
         if self._splitSequence == False: 
-            sequences, others,self.listseq5 = file_seq.find(path)
+            sequences, others = file_seq.find(path)
 
             
             for s in sequences:
@@ -359,22 +420,18 @@ class file_seq():
 
         files = [e for e in os.listdir(search_path)
                  if os.path.isfile(os.path.join(search_path, e))]
-        sequences, other_files, oriseq = cls.find_in_list(files)
+        sequences, other_files = cls.find_in_list(files)
         for sequence in sequences:
             sequence.path = search_path
-        return sequences, other_files, oriseq
+        return sequences, other_files
        
 	
 
     @classmethod
     def find_in_list(cls, entries):
     	
-    	other_files = []
-    	
-    	origin_sequence = [] 		
-
+    	other_files = []  		
         sequences = []
-
         entries.sort()
 
 
@@ -396,11 +453,10 @@ class file_seq():
                         adj_components[index] = str(n).zfill(padding)
                         yield ''.join(adj_components), n
 
-
-
             components = cls.NUMBER_PATTERN.split(entry)
  
             for i in range(len(components) - 2, 0, -2):
+
 
                 first = int(components[i])
                 last = int(components[i])
@@ -409,17 +465,27 @@ class file_seq():
                     padding = len(components[i])
                 else:
                     padding = 0
-
+                
+                w = -1
+                for filename in components:
+                	w = str(filename)
+                	a = os.path.splitext(w)
+               	
+                	if '.pdf' in a:
+                		components.remove(filename)
+                	elif '.mb' in a :
+                		components.remove(filename)
+						
+					
                 for filename, number in adjacent_files(components, i, padding):
                     if filename in entries:
-                    	origin_sequence.append(filename)
                         entries.remove(filename)
                         last = number
                     else:
                         break
 
                 for filename, number in adjacent_files(components, i, padding, reverse=True):
-                    if filename in entries:
+                    if filename in entries :
                         entries.remove(filename)
                         first = number
                     else:
@@ -443,7 +509,7 @@ class file_seq():
 
                 other_files.append(entry)
 
-        return sequences, other_files, origin_sequence
+        return sequences, other_files
 
 
 if __name__ == '__main__':
