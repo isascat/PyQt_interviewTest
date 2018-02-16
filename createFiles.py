@@ -4,7 +4,6 @@ import random
 import re
 import imp
 import sys
-import pyseq as seq  
 from PyQt4.Qt import QString
 
 # root where the files will be created
@@ -74,25 +73,30 @@ class FileSequenceWidget(QtGui.QWidget):
     def saveDialog(self, force=True):
 
 		display = QtGui.QDialog()
+		display.setWindowTitle("List Sequence Files")
+		display.setFixedWidth(250)
+		display.setFixedHeight(190)
+	
 		b1 = QtGui.QListWidget(display)
 		for i in self.listseq4:
 			b1.addItem(i)
-# 			print i
 		
-
 		display.exec_()
 
 
     def getFilenameSelected( self ):
+    	
         itemSelected = self.listfile.currentIndex().data()
         return os.path.join( self.path , itemSelected )
 
     def getDirectorySelected( self ):
+    	
         dirSelected = self.directorylist.currentIndex().data()
         return os.path.join( self.path , dirSelected )
 
 
     def selectdirectory(self):
+    	
         rows =  self.directorylist.selectionModel().selectedRows()
         itemSelected = rows[0].data()
         if  os.path.isdir(os.path.join( self.path , itemSelected)) :
@@ -101,6 +105,7 @@ class FileSequenceWidget(QtGui.QWidget):
         
 	
     def selectfile(self, number):
+    	
 		itemSelected = self.listfile.currentIndex().data()
 		self.listseq3.append(itemSelected)
 		path = QtCore.QDir.currentPath()
@@ -129,10 +134,8 @@ class FileSequenceWidget(QtGui.QWidget):
 
 
 
-
-
-
     def addItem(self, fn,typefile ):
+    	
     	item = QtGui.QListWidgetItem()
         item.setText(fn)
         item.setIcon(self.icons[typefile])
@@ -144,6 +147,7 @@ class FileSequenceWidget(QtGui.QWidget):
 
     
     def initInternalVar(self ):
+    	
         self._splitSequence = False
         self.iconFile = QtGui.QIcon("icons\\file.png")
         self.iconFolder = QtGui.QIcon("icons\\folder.png")
@@ -156,10 +160,7 @@ class FileSequenceWidget(QtGui.QWidget):
 
 
     def __init__(self, path, parent=None):
-        """
-        Create gui.
-        """
-        
+    
         super(FileSequenceWidget, self).__init__(parent)
         self.path = QtCore.QDir.currentPath()
         self.listseq = {}
@@ -200,12 +201,10 @@ class FileSequenceWidget(QtGui.QWidget):
 
         self.pathEdit.textChanged.connect(self.setCurrentDirPath)
         self.listfile.clicked.connect(self.selectfile)
-#         self.listfile.gotoparent.connect(self.goToParent)
         
         
         self.directorylist.doubleClicked.connect(self.selectdirectory)
         self.directorylist.itemSelected.connect(self.selectdirectory)
-#         self.directorylist.gotoparent.connect(self.goToParent)
 
 
  
@@ -218,7 +217,6 @@ class FileSequenceWidget(QtGui.QWidget):
 	           
     def setCurrentDirPath(self , path ):
     	
-# os.path.join(QtCore.QDir.cleanPath(QtCore.QDir.currentPath()), fileRoot)
         self.path = path
         
         
@@ -236,13 +234,10 @@ class FileSequenceWidget(QtGui.QWidget):
         	
             self.addItem(fn ,FileSequenceWidget.FOLDER)
             files = [e for e in os.listdir(path) if os.path.isfile(os.path.join(path, e))]
-#             for fn in files:
-# 				self.addItem(fn ,FileSequenceWidget.FILE)
 
         if self._splitSequence == False: 
             sequences, others,self.listseq5 = file_seq.find(path)
-#             for i in self.listseq2:
-#             	print i
+
             
             for s in sequences:
                 self.addItem(str(s), FileSequenceWidget.SEQUENCE)
@@ -255,25 +250,15 @@ class FileSequenceWidget(QtGui.QWidget):
             for fn in files:
             	self.addItem(fn ,FileSequenceWidget.FILE)
 	
-    """
-    refresh the filelist
-    """
+
     def refresh( self ):
         self.setCurrentDirPath( self.path)
 
 
-
-    """
-        Set Action for the context Menu of DirectoryList
-        @param action list of action.
-    """
     def setContextMenuActionDirectoryList( self , action):
         self.directorylist.setContextMenuAction( action )
 	
-    """
-        Set Action for the context Menu of DirectoryList
-        @param action list of action.
-    """
+
     def setContextMenuActionFileList( self , action):
         self.listfile.setContextMenuAction( action )
 
@@ -333,7 +318,7 @@ class file_seq():
                 raise TypeError, "sequence indexes must be integers"
             
     def filename(self, number):
-        """Return the filename for the given absolute number in the sequence."""
+    	
         if number >= self.first and number <= self.last:
             return "".join([self.head,
                            str(number).zfill(self.padding),
@@ -342,18 +327,7 @@ class file_seq():
             raise IndexError, "number out of sequence range"
 
     def format(self, template="{head}%0{padding}d{tail}", padchar="#"):
-        """Return the file sequence as a formatted string according to
-        the given template. Due to the use of format(), this method requires
-        Python 2.6 or later.
 
-        The template supports all the basic sequence attributes, i.e.
-        head, tail, first, last, length, padding, path. 
-
-        In addition, it supports the following:
-
-        padchars - character repeated to match padding (at least one)
-        range - sequence range as a string, first-last
-        """
 
         values = {"head": self.head,
                   "tail": self.tail,
@@ -382,9 +356,7 @@ class file_seq():
 
     @classmethod
     def find(cls, search_path):
-        """
-        Find all file sequences at the given path. Returns a tuple (sequences, other_files).
-        """
+
         files = [e for e in os.listdir(search_path)
                  if os.path.isfile(os.path.join(search_path, e))]
         sequences, other_files, oriseq = cls.find_in_list(files)
@@ -399,23 +371,12 @@ class file_seq():
     	
     	other_files = []
     	
-    	origin_sequence = []
+    	origin_sequence = [] 		
 
-    		
-        """
-        Find all file sequences in a list of files. Returns a tuple (sequences, other_files).
-        """
         sequences = []
-
-
-        # We sort the list to ensure that padded entries are found before any
-        # unpadded equivalent.
 
         entries.sort()
 
-        # Our strategy here is to pop a filename off the list, and search the
-        # remaining entries for adjacent files that would indicate it is part of
-        # a file sequence.
 
         while entries:
 
@@ -444,15 +405,11 @@ class file_seq():
                 first = int(components[i])
                 last = int(components[i])
 
-                # Since the list is sorted, we know 0999 will always appear before 1000
-                # so this should be safe.
-
                 if components[i].startswith("0"):
                     padding = len(components[i])
                 else:
                     padding = 0
 
-                # First, we attempt to find the upper bound of this sequence..
                 for filename, number in adjacent_files(components, i, padding):
                     if filename in entries:
                     	origin_sequence.append(filename)
@@ -461,7 +418,6 @@ class file_seq():
                     else:
                         break
 
-                # ..and then the lower bound.
                 for filename, number in adjacent_files(components, i, padding, reverse=True):
                     if filename in entries:
                         entries.remove(filename)
@@ -470,7 +426,7 @@ class file_seq():
                         break
 
                 if (first - last):
-                    # We've found what looks like a sequence of files.
+
                     sequence = file_seq("",
                                             "".join(components[:i]), 
                                             "".join(components[i + 1:]),
@@ -484,7 +440,7 @@ class file_seq():
             if sequence:
                 sequences.append(sequence)
             else:
-                # This file is not part of any sequence.
+
                 other_files.append(entry)
 
         return sequences, other_files, origin_sequence
